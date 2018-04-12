@@ -1,80 +1,191 @@
+//====================================================//
+          //
+//====================================================//
 
-const $students = $('.student-item'); //could add li here?
-const $studentSearch = $('.student-search');
-const $pagination = $('.pagination');
-const $studentList = pages($students);
+//VARIABLES TO HOLD THE PAGE ELEMENTS
+const $studentList = $('.student-list');
+const $students = $($studentList.children);
+const $page = $('.page');
+const $headerDiv = $('.page-header h2');
 
-//========================================//
-function pages(listOfStudents) {
-  let prevList = listOfStudents.slice();
-  let pagesArray = [];
-  while (prevList.length) {
-    pagesArray.push(prevList.splice(0,10));
-  }
-  return pagesArray;
+//ELEMENTS CREATED TO ADD TO THE PAGE DYNAMICALLY
+const searchDiv = document.createElement('div');
+const searchButton = document.createElement('button');
+const searchInput = document.createElement('input');
+const buttonDiv = document.createElement('div');
+const error = document.createElement('p');
+  //
+  error.textContent = 'No Results Found';
+  searchDiv.appendChild(error);
+
+//
+const searchArray = [];
+const studentArray = [];
+let resultsArray = [];
+let indiciesArray = [];
+
+//
+let search = false;
+
+//====================================================//
+          //
+//====================================================//
+
+//CREATE A FUNCTION THAT SETS THE INITIAL VIEW
+const initialView = () => {
+  hide();
+  displayStudents($students, 0, 9);
+  createSearchBar();
+  createButtons($students);
+  createArrays();
 }
-//========================================//
-function showPage(pageNumber, pageList) {
-  $('.student-list li').hide();
-  $.each(pageList, function(index, page) {
-    if(pageNumber === index) {
-      $.each(page, function(i, listItem){
-        $(listItem).fadeIn('fast');
-      });
+
+//HIDE THE LIST ITEMS
+const hide = () => {
+  for(let i = 0; i < $students.length; i++) {  //WHERE CAN I USE jQUERY HERE?
+    $students[i].style.display = 'none';
+  }
+  error.style.display = 'none';
+}
+
+//
+const displayStudents = (arrayArg, startValue, stopValue) => {
+  hide();
+  for (let i = startValue; i <= stopValue; i++) {
+    if (i < arrayArg.length){
+      $students[i].textContent = " ";
     }
-  });
-
-}
-
-//========================================//
-function appendButtons(pageList) {
-  $('.page').append($pagination)
-  let numOfPages = pageList.length;
-  for (let i = 1; i <= numOfPages; i++){
-    let buttons = '<li><a href="#">' + i + '</a></li>'
-    $('.pagination ul li a').append(buttons);
   }
-
-  $('.pagination ul li a').on('click', function(event){
-    let pageSelect = parseInt($(this)[0].text) - 1;
-    showPage(pageSelect, pageList);
-      $('.pagination ul li a').removeClass();
-      $(this).addClass('active');
-      event.preventDefault();
-  });
-
 }
-//========================================//
-function searchList () {
-  let searchIt = $('#search').val().toLowerCase().trim();
-    let filterStudents = $students.filter(function(i){
-    let studentEmail = $(this).find('.email').text();
-    let studentName = $(this).find('h3').text();
-    if (studentName.indexOf(searchIt) > -1 || studentEmail.indexOf(serachIt) > -1){
-      return true;
+
+//
+const createSearchBar = () => {
+  searchInput.id = 'Search-Input';
+  searchInput.setAttribute('placeholder', 'Search For Students');
+  searchButton.className = 'Search';
+  searchButton.textContent = 'Search';
+  searchDiv.appendChild(searchInput);
+  searchDiv.appendChild(searchButton);
+  $headerDiv.appendChild(searchDiv);
+}
+
+//
+const createButtons = (studentsPerPage) => {
+  removeButtons();
+  let getButtons = studentsPerPage.length / 10;
+  for (let i = 0; i < getButtons + 1; i++) {
+    if(getButtons < i) {
+      $page.appendChild(buttonDiv);
     }
     else {
-      return false;
+      let newButton = document.createElement('button');
+      newButton.className = 'next-page-btn';
+      newButton.textContent = i;
+      buttonDiv.appendChild(newButton);
     }
-  });
-  if (filterStudents.length === 0) {
-    $('.page-header h2').text('No Result(s)');
   }
-  else {
-    $('.page-header h2').text('STUDENTS');
-  }
-  let paginatedStudents = pages(filterStudents);
-    $('.pagination').remove();
-    if (filterStudents >= 10) {
-      appendButtons(paginatedStudents);
-    }
-    showPage(0, paginatedStudents);
 }
 
-//========================================//
-appendButtons($studentList);
-showPage(0, $studentList);
+//
+const removeButtons = () => {
+  while(buttonDiv.hasChildNodes()) {
+    buttonDiv.removeChild(buttonDiv.childNodes[-1]);
+  }
+}
 
-//========================================//
-$('.student-search').find('button').on('click', searchList);
-$('.student-search').find('input').keyup(searchList);
+//
+const createArrays = () => {
+  for (let i = 0; i < $students.length; i++) {
+    studentArray.push($students[i]);
+  }
+  for (let i = 0; i < $students.length; i++) {
+    let info = studentsArray[i].children[0];
+    let eachStudent = info.children;
+    searchArray.push(eachStudent[i].textContent);
+  }
+}
+
+//GLOBAL SCOPE OF AN ARRAY THAT WILL SAVE SEARACH RESULTS
+const createResults = (array) => {
+  for (let i = 0; i < array.length; i++) {
+    resultsArray.push(array[i]);
+  }
+}
+
+//====================================================//
+          //
+//====================================================//
+
+//
+const studentFilter = (search) => {
+  return searchArray.filter((el) =>
+    el.toLowerCase().indexOf(search.toLowerCase()) > -1
+  );
+}
+
+//
+const compare = () => {
+  for(let i = 0; i < resultsArray.length; i++) {
+    const findName = ($student) => {
+      return $student === resultsArray[i];
+    }
+    indiciesArray.push(searchArray.findIndex(findName));
+  }
+}
+
+const displayResults = (startValue, stopValue) => {
+  hide();
+  for (let j = startValue; j < stopValue; j++) {
+    if(j < indiciesArray.length) {
+      $students.indiciesArray[j].style.display = '';
+    }
+    else indiciesArray = [];
+  }
+}
+
+//====================================================//
+          //
+//====================================================//
+
+//
+$(searchButton).on('click', () => {
+  hide();
+  removeButtons();
+  search = true;
+  resultsArray = [];
+  searchArray = [];
+  let searchText = searchInput.value;
+  let results = studentFilter(searchText);
+  createResults(results);
+    if(searchText === ''){
+      initialView();
+      search = false;
+      return;
+    }
+    else if (results.length > 0) {
+      compare();
+      displayResults(0, 9);
+      createButtons(resultsArray);
+    }
+    else {
+      error.style.display = '';
+    }
+});
+
+//
+$(buttonDiv).on('click', (e) => {
+  let button = e.target;
+  let buttonText = button.textContent;
+  let $page = parseInt(buttonText);
+  let begin = (page * 10) - 10;
+  let end = begin + 9;
+  if (search) {
+    compare();
+    displayResults(begin, end);
+  }
+  else {
+    displayStudents(students, begin, end);
+  }
+});
+
+initialView();
