@@ -1,191 +1,159 @@
-//====================================================//
-          //
-//====================================================//
+//ALL STUDENT ITEM LIST ELEMENTS ARE ADDED TOGETHER TO FORM THE $STUDENT VARIABLE
+const $student = $(".student-item");
 
-//VARIABLES TO HOLD THE PAGE ELEMENTS
-const $studentList = $('.student-list');
-const $students = $($studentList.children);
-const $page = $('.page');
-const $headerDiv = $('.page-header h2');
+//===================================================================================//
+//===================================================================================//
 
-//ELEMENTS CREATED TO ADD TO THE PAGE DYNAMICALLY
-const searchDiv = document.createElement('div');
-const searchButton = document.createElement('button');
-const searchInput = document.createElement('input');
-const buttonDiv = document.createElement('div');
-const error = document.createElement('p');
-  //
-  error.textContent = 'No Results Found';
-  searchDiv.appendChild(error);
+//A FUNCTION FORMULATED TO TAKE IN TWO ARGUMENTS THE PAGE & LIST OF STUDENTS ON THERE
+function showPage(page, list) {
 
-//
-const searchArray = [];
-const studentArray = [];
-let resultsArray = [];
-let indiciesArray = [];
+  //VARIABLE USED FOR DETERMINING THE DISPLAY
+  let theDisplay = page * 10;
 
-//
-let search = false;
+  //HIDES ALL STUDENT LIST ELEMENTS
+  $($student).hide();
 
-//====================================================//
-          //
-//====================================================//
-
-//CREATE A FUNCTION THAT SETS THE INITIAL VIEW
-const initialView = () => {
-  hide();
-  displayStudents($students, 0, 9);
-  createSearchBar();
-  createButtons($students);
-  createArrays();
-}
-
-//HIDE THE LIST ITEMS
-const hide = () => {
-  for(let i = 0; i < $students.length; i++) {  //WHERE CAN I USE jQUERY HERE?
-    $students[i].style.display = 'none';
-  }
-  error.style.display = 'none';
-}
-
-//
-const displayStudents = (arrayArg, startValue, stopValue) => {
-  hide();
-  for (let i = startValue; i <= stopValue; i++) {
-    if (i < arrayArg.length){
-      $students[i].textContent = " ";
+  //LOOP THROUGH FOR A DISPLAYED PAGE OF THE LIST ELEMENTS
+  for (let i = 0; i < list.length; i++) {
+    if(i >= theDisplay - 10 && i <= theDisplay - 1) {
+      $(list[i]).show();
     }
   }
 }
 
-//
-const createSearchBar = () => {
-  searchInput.id = 'Search-Input';
-  searchInput.setAttribute('placeholder', 'Search For Students');
-  searchButton.className = 'Search';
-  searchButton.textContent = 'Search';
-  searchDiv.appendChild(searchInput);
-  searchDiv.appendChild(searchButton);
-  $headerDiv.appendChild(searchDiv);
+//===================================================================================//
+//===================================================================================//
+
+//A FUNCTION CREATED FOR THE PAGINATION BUTTONS, WITH THE LIST ELEMENTS LOOPED THROUGH
+function appendPages (list) {
+
+  //DETERMINE PAGE NUMBERS FROM THE LENGTH OF OUR LIST OF STUDENTS
+  //DIVIDE TO PROVIDE 10 OR THE APPROXIMATE STUDENTS PER PAGE
+  const pageNumbers = Math.ceil(list.length / 10);
+
+  //CREATE INITIAL PAGINATION BEFORE APPENDING TO THE DOM
+  const $pagination = $("<div class='pagination'></div>");
+
+  //CREATE INITIAL UL BEFORE APPENDING TO THE DOM
+  const $ul = $("<ul></ul>")
+
+  //APPEND THE PAGINATION TO THE PAGE
+  $(".page").append($pagination);
+
+  //APPEND THE UL TO THE PAGINATION DIV
+  $(".pagination").append($ul);
+
+  //LOOP THROUGH PAGE NUMBERS TO CREATE PAGINATION BUTTONS
+  for(let i = 1; i <= pageNumbers; i++) {
+    if (i === 1) {
+
+      //CREATES THE FIRST 'ACTIVE' PAGINATON BUTTON & APPENDS IT TO THE DOM
+      let $singlePage = $("<li><a class='active' href='#'>" + i + "</li>");
+      $($ul).append($singlePage);
+    }
+
+    //CREATES THE FOLLOWING 'INACTIVE' PAGINATION BUTTONS & APPENDS THEM TO THE DOM
+    else {
+      //CREATES THE ADDITIONAL PAGINATION BUTTONS & APPENDS THEM TO THE DOM
+      let $singlePage = $("<li><a href='#'>" + i + "</li>");
+      $($ul).append($singlePage);
+    }
+  }
+
+  //A CLICK EVENT FOR THE PAGINATION BUTTONS
+  $(".pagination a").on('click', function() {
+    let $singlePage = $(this).text();
+
+    //CALL THE FUNCTION
+    showPage($singlePage, list);
+
+    //ON THE CURRENT PAGINATION ACTIVE, WE NOW REMOVE IT
+    $(".pagination a").removeClass("active");
+    //THE NEXT EVENT WE CLICK FOR WILL BECOME ACTIVE
+    $(this).addClass("active");
+  });
+
+  //IF THERE IS ONLY 1 PAGE, THE PAGINATION BUTTONS ARE HIDDEN
+  if (pageNumbers === 1) {
+    $(".pagination").hide();
+  }
 }
 
-//
-const createButtons = (studentsPerPage) => {
-  removeButtons();
-  let getButtons = studentsPerPage.length / 10;
-  for (let i = 0; i < getButtons + 1; i++) {
-    if(getButtons < i) {
-      $page.appendChild(buttonDiv);
+//===================================================================================//
+//===================================================================================//
+
+//A FUNCTION TO SEARCH THE STUDENTS WE HAVE ADDED TO THE PAGES
+function searchIt () {
+  //SET A STUDENT SEARCH VARIABLE & APPEND THE HTML TO THE DOM
+  const $studentSearch = $("<div class='student-search'></div>");
+  //SET AN INPUT OPTION & APPEND THE HTML TO THE DOM
+  const $input = $("<input id='input' placeholder='Search For Students'>");
+
+  //TO THE PAGE HEADER CLASS, WE APPEND THE STUDENT SEARCH VARIABLE CREATED ABOVE
+  $('.page-header').append($studentSearch);
+  //TO THE STUDNET SEARCH CLASS, WE APPEND THE INPUT VARIABLE CREATED ABOVE
+  $('.student-search').append($input);
+
+  //ON THE INPUT ID WE CREATE A CLICK EVENT
+  $('#input').keyup(function() {
+    //SET A VARAIBLE TO SEARCH THE VALUE OF THE INPUT ENTERED IN
+    let $searchValue = $($input).val().toLowerCase();
+    //SET A VARIABLE TO SEE IF THE MATCH WAS FOUND
+    let matchFound;
+    //SET A VARIABLE TO = FALSE ... WILL BECOME TRUE IF SEARCH TERM = MATCH OF STUDENT LIST
+    let match = false;
+
+    //WE HIDE THE STUDENT LIST, THE PAGINATION AND REMOVE THE MESSAGE
+    $($student).hide();
+    $(".pagination").hide();
+    $('.message').remove();
+
+    //LOOPS THROUGH STUDENT LIST
+    for (let i = 0; i < $student.length; i++) {
+      //STORE STUDENT NAMES IN A NAME VARIABLE
+      let $name = $(".student-details h3").eq(i).text(); //can i use student-details or student item?
+      //STORE EMAIL IN AN EMAIL VARIABLE
+      let $email = $(".email").eq(i).text();
+
+      //IF SEARCH CONTAINS EITHER NAME OR EMAIL
+      if ($name.includes($searchValue) || $email.includes($searchValue)) {
+        //ADD TO THE MATCHFOUND VARIABLE
+        matchFound = $(matchFound).add($($student).eq(i));
+        //SEARCH TERM = MATCH OF STUDENT
+        match = true;
+      }
+    }
+
+    //IF NO MATCHES ARE FOUND
+    if (match === false) {
+      //CREATE A MESSAGE TO SEND TO THE DOM
+      let $message = $("<p class = 'message'> Sorry, No Students Found!</p>");
+      //THEN APPEND THAT MESSAGE TO THE DOM
+      $('.page').append($message);
     }
     else {
-      let newButton = document.createElement('button');
-      newButton.className = 'next-page-btn';
-      newButton.textContent = i;
-      buttonDiv.appendChild(newButton);
+      //CALL ON SHOWPAGE & APPENDPAGES FUNCTIONS WITH THE ARGUMENT OF MATCHFOUND
+      showPage(1, matchFound);
+      appendPages(matchFound);
     }
-  }
-}
+    //IF SEARCH IS AN EMPTRY STRING
+    if ($searchValue === "") {
+      //HIDE ANY EXISTING STUDENT LIST OR PAGINATION
+      $($student).hide();
+      $(".pagination").hide();
 
-//
-const removeButtons = () => {
-  while(buttonDiv.hasChildNodes()) {
-    buttonDiv.removeChild(buttonDiv.childNodes[-1]);
-  }
-}
-
-//
-const createArrays = () => {
-  for (let i = 0; i < $students.length; i++) {
-    studentArray.push($students[i]);
-  }
-  for (let i = 0; i < $students.length; i++) {
-    let info = studentsArray[i].children[0];
-    let eachStudent = info.children;
-    searchArray.push(eachStudent[i].textContent);
-  }
-}
-
-//GLOBAL SCOPE OF AN ARRAY THAT WILL SAVE SEARACH RESULTS
-const createResults = (array) => {
-  for (let i = 0; i < array.length; i++) {
-    resultsArray.push(array[i]);
-  }
-}
-
-//====================================================//
-          //
-//====================================================//
-
-//
-const studentFilter = (search) => {
-  return searchArray.filter((el) =>
-    el.toLowerCase().indexOf(search.toLowerCase()) > -1
-  );
-}
-
-//
-const compare = () => {
-  for(let i = 0; i < resultsArray.length; i++) {
-    const findName = ($student) => {
-      return $student === resultsArray[i];
+      //CALL ON SHOWPAGE & APPENDPAGES FUNCTIONS WITH THE ARGUMENT STUDENTS
+      showPage(1, $student);
+      appendPages($student);
     }
-    indiciesArray.push(searchArray.findIndex(findName));
-  }
+
+  });
 }
 
-const displayResults = (startValue, stopValue) => {
-  hide();
-  for (let j = startValue; j < stopValue; j++) {
-    if(j < indiciesArray.length) {
-      $students.indiciesArray[j].style.display = '';
-    }
-    else indiciesArray = [];
-  }
-}
+//===================================================================================//
+//===================================================================================//
 
-//====================================================//
-          //
-//====================================================//
-
-//
-$(searchButton).on('click', () => {
-  hide();
-  removeButtons();
-  search = true;
-  resultsArray = [];
-  searchArray = [];
-  let searchText = searchInput.value;
-  let results = studentFilter(searchText);
-  createResults(results);
-    if(searchText === ''){
-      initialView();
-      search = false;
-      return;
-    }
-    else if (results.length > 0) {
-      compare();
-      displayResults(0, 9);
-      createButtons(resultsArray);
-    }
-    else {
-      error.style.display = '';
-    }
-});
-
-//
-$(buttonDiv).on('click', (e) => {
-  let button = e.target;
-  let buttonText = button.textContent;
-  let $page = parseInt(buttonText);
-  let begin = (page * 10) - 10;
-  let end = begin + 9;
-  if (search) {
-    compare();
-    displayResults(begin, end);
-  }
-  else {
-    displayStudents(students, begin, end);
-  }
-});
-
-initialView();
+//CALL ON FUNCTIONS WHEN THE PAGE LOADS
+showPage(1, $student);
+appendPages($student);
+searchIt();
